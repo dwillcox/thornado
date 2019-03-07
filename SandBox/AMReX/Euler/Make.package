@@ -17,7 +17,6 @@ CEXE_sources   += Restart.cpp
 
 # Boundary conditions
 f90EXE_sources += MF_Euler_BoundaryConditionsModule.f90
-CEXE_sources   += BoundaryConditions.cpp
 
 # thornado VPATH_LOCATIONS:
 VPATH_LOCATIONS += $(THORNADO_DIR)/Modules/Numbers
