@@ -25,13 +25,12 @@ MODULE  MF_Euler_dgDiscretizationModule
   ! --- Local Modules ---
   USE MF_UtilitiesModule, ONLY: &
     AMReX2thornado, &
-    thornado2AMReX, &
+    thornado2AMReX
+  USE MyAmrModule,        ONLY: &
+    nLevels
+  USE MF_Euler_BoundaryConditionsModule, ONLY: &
     EdgeMap, ConstructEdgeMap, &
     ApplyNonPeriodicBoundaryConditions_Fluid
-  USE MyAmrModule,        ONLY: &
-    nLevels, bcAMReX
-  USE MF_Euler_BoundaryConditionsModule, ONLY: &
-    MF_Euler_ApplyBoundaryConditions
 
   IMPLICIT NONE
   PRIVATE
@@ -69,10 +68,6 @@ CONTAINS
 
       ! --- Apply boundary conditions to interior domains ---
       CALL MF_uCF(iLevel) % Fill_Boundary( GEOM(iLevel) )
-
-      ! --- Apply boundary conditions to physical domains ---
-      CALL MF_Euler_ApplyBoundaryConditions &
-             ( MF_uCF(iLevel) % P, GEOM(iLevel) % P, bcAMReX )
 
       CALL MF_duCF(iLevel) % setval( 0.0_amrex_real )
 
@@ -121,7 +116,6 @@ CONTAINS
 
         CALL ConstructEdgeMap( GEOM(iLevel), BX, Edge_Map )
         CALL ApplyNonperiodicBoundaryConditions_Fluid( iX_B0, iX_E0, iX_B1, iX_E1, U, Edge_Map )
-        CALL ApplyNonperiodicBoundaryConditions_Fluid( iX_B0, iX_E0, iX_B1, iX_E1, G, Edge_Map )
 
         CALL Euler_ComputeIncrement_DG_Explicit &
                ( iX_B0, iX_E0, iX_B1, iX_E1, &
