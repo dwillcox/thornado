@@ -17,13 +17,17 @@ MODULE  MF_Euler_dgDiscretizationModule
     nCF
   USE GeometryFieldsModule,     ONLY: &
     nGF
+  USE Euler_BoundaryConditionsModule, ONLY: &
+    ApplyBoundaryConditions_Fluid
   USE Euler_dgDiscretizationModule, ONLY: &
     Euler_ComputeIncrement_DG_Explicit
 
   ! --- Local Modules ---
   USE MF_UtilitiesModule, ONLY: &
     AMReX2thornado, &
-    thornado2AMReX
+    thornado2AMReX, &
+    EdgeMap, ConstructEdgeMap, &
+    ApplyNonPeriodicBoundaryConditions_Fluid
   USE MyAmrModule,        ONLY: &
     nLevels, bcAMReX
   USE MF_Euler_BoundaryConditionsModule, ONLY: &
@@ -39,7 +43,7 @@ CONTAINS
 
 
   SUBROUTINE MF_Euler_ComputeIncrement( GEOM, MF_uGF, MF_uCF, MF_duCF )
- 
+
     TYPE(amrex_geometry), INTENT(in)    :: GEOM   (0:nLevels)
     TYPE(amrex_multifab), INTENT(in)    :: MF_uGF (0:nLevels)
     TYPE(amrex_multifab), INTENT(inout) :: MF_uCF (0:nLevels)
@@ -58,6 +62,8 @@ CONTAINS
 
     INTEGER :: iLevel
     INTEGER :: iX_B0(3), iX_E0(3), iX_B1(3), iX_E1(3)
+
+    TYPE(EdgeMap) :: Edge_Map
 
     DO iLevel = 0, nLevels
 
@@ -113,6 +119,9 @@ CONTAINS
                            iX_B1(2):iX_E1(2), &
                            iX_B1(3):iX_E1(3),1:nCF) )
 
+        CALL ConstructEdgeMap( GEOM(iLevel), BX, Edge_Map )
+        CALL ApplyNonperiodicBoundaryConditions_Fluid( iX_B0, iX_E0, iX_B1, iX_E1, U, Edge_Map )
+        CALL ApplyNonperiodicBoundaryConditions_Fluid( iX_B0, iX_E0, iX_B1, iX_E1, G, Edge_Map )
 
         CALL Euler_ComputeIncrement_DG_Explicit &
                ( iX_B0, iX_E0, iX_B1, iX_E1, &

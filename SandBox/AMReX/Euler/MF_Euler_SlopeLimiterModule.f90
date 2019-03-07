@@ -17,13 +17,17 @@ MODULE MF_Euler_SlopeLimiterModule
     nCF
   USE GeometryFieldsModule,     ONLY: &
     nGF
+  USE Euler_BoundaryConditionsModule, ONLY: &
+    ApplyBoundaryConditions_Fluid
   USE Euler_SlopeLimiterModule, ONLY: &
     Euler_ApplySlopeLimiter
 
   ! --- Local Modules ---
   USE MF_UtilitiesModule, ONLY: &
     AMReX2thornado, &
-    thornado2AMReX
+    thornado2AMReX, &
+    EdgeMap, ConstructEdgeMap, &
+    ApplyNonPeriodicBoundaryConditions_Fluid
   USE MyAmrModule,        ONLY: &
     nLevels, bcAMReX
   USE MF_Euler_BoundaryConditionsModule, ONLY: &
@@ -54,6 +58,8 @@ CONTAINS
     REAL(amrex_real), ALLOCATABLE :: U(:,:,:,:,:)
 
     INTEGER :: iLevel, iX_B0(3), iX_E0(3), iX_B1(3), iX_E1(3)
+
+    TYPE(EdgeMap) :: Edge_Map
 
     IF( nDOFX .EQ. 1 ) RETURN
 
@@ -105,6 +111,9 @@ CONTAINS
                            iX_B1(2):iX_E1(2), &
                            iX_B1(3):iX_E1(3),1:nCF) )
 
+        CALL ConstructEdgeMap( GEOM(iLevel), BX, Edge_Map )
+        CALL ApplyNonperiodicBoundaryConditions_Fluid( iX_B0, iX_E0, iX_B1, iX_E1, U, Edge_Map )
+        CALL ApplyNonperiodicBoundaryConditions_Fluid( iX_B0, iX_E0, iX_B1, iX_E1, G, Edge_Map )
 
         CALL Euler_ApplySlopeLimiter &
                ( iX_B0, iX_E0, iX_B1, iX_E1, &
